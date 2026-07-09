@@ -79,6 +79,8 @@ INTERACTION STYLE:
 
 IMPORTANT RULES:
   - This application is ONLY available to USA-based employees. Non-USA employees must be refused.
+  - WFH requests CANNOT start on a USA federal holiday — inform the user and ask for a different date.
+  - Federal holidays are excluded from quota calculations: effective WFH days = calendar days minus holidays.
   - Only Directors and above can access this application.
   - Only SM+ can approve/reject/seek-clarification.
   - Only the Direct Reporting Manager can raise on behalf of a reportee, and only for MEDICAL_SELF.
@@ -92,7 +94,8 @@ IMPORTANT RULES:
                 "approval_workflow_agent",
                 "escalation_agent",
                 "clarification_agent",
-                "request_status_agent"
+                "request_status_agent",
+                "holidays_agent"
             ]
         },
 
@@ -111,25 +114,34 @@ STEPS:
 1. Verify the requester has access (Director+) via access_control_agent.
 2. If raising on behalf of another employee, verify on-behalf-of rules via access_control_agent
    (only DRM, only MEDICAL_SELF).
-3. Validate eligibility via eligibility_validator_agent:
+3. HOLIDAY CHECK: Call holidays_agent (operation: is_holiday, date: start_date).
+   If allowed_to_submit is false — STOP immediately. Tell the user their WFH request cannot
+   start on a USA federal holiday and ask them to choose a different start date.
+4. EFFECTIVE DAYS: Call holidays_agent (operation: count_effective_days, start_date, end_date).
+   Use effective_wfh_days (calendar days minus federal holidays) for ALL quota checks and
+   for storing days_requested in the database — never use raw calendar days.
+   Inform the user of the breakdown (e.g. "14 calendar days - 1 holiday (Christmas) = 13 WFH days").
+5. Validate eligibility via eligibility_validator_agent using effective_wfh_days as days_requested:
    - Check days remaining for the category.
    - For MATERNITY_RETURNEE and EXTRAORDINARY, allow unlimited re-requests after initial 180 days.
-4. If eligible, create the request via database_agent (operation: create_request).
-5. Identify the correct approver via org_hierarchy_agent (operation: get_approver) —
+6. If eligible, create the request via database_agent (operation: create_request).
+   Set days_requested = effective_wfh_days.
+7. Identify the correct approver via org_hierarchy_agent (operation: get_approver) —
    must be SM or above.
-6. Set the approver on the request via database_agent (operation: update_request_status,
+8. Set the approver on the request via database_agent (operation: update_request_status,
    include approver_id).
-7. Send notification to approver via notification_agent (type: APPROVAL_PENDING).
-8. Send confirmation to the requester via notification_agent (type: REQUEST_SUBMITTED).
-9. Return the request ID and next steps to the front desk.
+9. Send notification to approver via notification_agent (type: APPROVAL_PENDING).
+10. Send confirmation to the requester via notification_agent (type: REQUEST_SUBMITTED).
+11. Return the request ID and next steps to the front desk.
 
-CATEGORY LIMITS (calendar days unless noted):
+CATEGORY LIMITS (effective WFH days after holiday exclusion):
   MEDICAL_SELF: 14 | DEPENDENT_CARE: 7 | LOCALIZED_EXIGENCY: 7
   OFFICE_TRAVEL: 2 business days | MATERNITY_RETURNEE: 180 (unlimited) | EXTRAORDINARY: 180 (unlimited)
 """ ${aaosa_instructions},
             "tools": [
                 "access_control_agent",
                 "eligibility_validator_agent",
+                "holidays_agent",
                 "database_agent",
                 "org_hierarchy_agent",
                 "notification_agent"
@@ -163,6 +175,9 @@ CHECKS TO PERFORM:
 
 IMPORTANT: Never reject MATERNITY_RETURNEE or EXTRAORDINARY requests for insufficient days —
 they are unlimited.
+NOTE: The days_requested passed to you is already the effective_wfh_days (calendar days minus
+USA federal holidays in the range), pre-computed by holidays_agent. Always compare this effective
+count against the category limit — never compare raw calendar days.
 """ ${aaosa_instructions},
             "tools": ["database_agent", "access_control_agent"]
         },
@@ -470,6 +485,28 @@ For listing requests by employee:
                 }
             },
             "class": "coded_tools.rwr_rto.resubmit_checker_tool.ResubmitCheckerTool"
+        },
+
+        {
+            "name": "holidays_agent",
+            "function": {
+                "description": "USA federal holiday management. Checks if a date is a holiday (WFH requests cannot start on a federal holiday), lists holidays for a given year, and computes effective WFH days in a date range (calendar days minus federal holidays) for accurate quota deduction.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "operation": {
+                            "type": "string",
+                            "description": "Operation: is_holiday | list_holidays | count_effective_days"
+                        },
+                        "date":       {"type": "string", "description": "Date YYYY-MM-DD — for is_holiday"},
+                        "year":       {"type": "int",    "description": "Year e.g. 2026 — for list_holidays"},
+                        "start_date": {"type": "string", "description": "Start date YYYY-MM-DD — for count_effective_days"},
+                        "end_date":   {"type": "string", "description": "End date YYYY-MM-DD — for count_effective_days"}
+                    },
+                    "required": ["operation"]
+                }
+            },
+            "class": "coded_tools.rwr_rto.holiday_tool.HolidayTool"
         }
 
     ]

@@ -39,7 +39,13 @@ def initialize_database() -> None:
         with open(schema_path, "r", encoding="utf-8") as f:
             cursor.executescript(f.read())
     cursor.execute("SELECT COUNT(*) FROM employees")
-    if cursor.fetchone()[0] == 0 and os.path.exists(seed_path):
+    needs_employees = cursor.fetchone()[0] == 0
+    try:
+        cursor.execute("SELECT COUNT(*) FROM usa_holidays")
+        needs_holidays = cursor.fetchone()[0] == 0
+    except Exception:
+        needs_holidays = True
+    if (needs_employees or needs_holidays) and os.path.exists(seed_path):
         with open(seed_path, "r", encoding="utf-8") as f:
             cursor.executescript(f.read())
     conn.commit()
@@ -89,6 +95,26 @@ class DatabaseTool(CodedTool):
     def _create_request(self, args: Dict[str, Any]) -> Dict[str, Any]:
         conn = get_connection()
         try:
+            # Enforce: WFH requests cannot start on a USA federal holiday
+            start_date = args.get("start_date", "")
+            if start_date:
+                try:
+                    holiday_row = conn.execute(
+                        "SELECT name FROM usa_holidays WHERE holiday_date=?", (start_date,)
+                    ).fetchone()
+                    if holiday_row:
+                        return {
+                            "error": (
+                                f"Cannot submit WFH request. '{start_date}' is a USA federal holiday: "
+                                f"{holiday_row['name']}. Please choose a different start date."
+                            ),
+                            "start_date": start_date,
+                            "holiday_name": holiday_row["name"],
+                            "allowed_to_submit": False,
+                        }
+                except Exception:
+                    pass  # usa_holidays table not yet available; proceed without check
+
             request_id = str(uuid.uuid4())[:8].upper()
             now = datetime.now().isoformat()
             conn.execute(

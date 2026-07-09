@@ -68,3 +68,11 @@ CREATE TABLE IF NOT EXISTS days_balance (
     UNIQUE (employee_id, category, fiscal_year),
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
+
+CREATE TABLE IF NOT EXISTS usa_holidays (
+    holiday_id   TEXT PRIMARY KEY,
+    holiday_date TEXT NOT NULL UNIQUE,  -- YYYY-MM-DD
+    name         TEXT NOT NULL,
+    year         INTEGER NOT NULL,
+    country      TEXT NOT NULL DEFAULT 'USA'
+);

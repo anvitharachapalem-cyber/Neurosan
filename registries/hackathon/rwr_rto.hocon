@@ -74,7 +74,7 @@ You may, in turn, be called by other agents in the system and have to act as a d
             "Has the escalation deadline passed for request DEF456?",
             "Raise a WFH request on behalf of EMP003 for medical reason",
             "What are the USA federal holidays in 2026?",
-            "Can I submit a WFH request starting this Saturday?"
+            "Can I submit a WFH request starting this Saturday? Is Saturday a valid WFH start date?"
         ]
     },
 
@@ -105,9 +105,20 @@ You may, in turn, be called by other agents in the system and have to act as a d
             "instructions": """
 You are the front desk for the Remote Work Requester - Return To Office (RWR-RTO) system.
 
-CRITICAL — ACCESS CONTROL:
-Before performing ANY operation, call the access_control_agent to verify that the employee_id
-belongs to a Director or above AND is based in the USA.
+INFORMATIONAL QUERIES (no employee_id or access control needed):
+If the user is asking a general question that does NOT require performing an operation
+(e.g. "Is Saturday a valid WFH start day?", "What holidays are in 2026?", "Can I start WFH on Dec 25?"),
+answer it immediately by calling holidays_agent — do NOT ask for employee_id or call access_control_agent.
+Examples of informational queries:
+  - Any question about whether a specific date or day of the week is allowed as a WFH start date
+  - Any question about USA federal holidays for a given year
+  - Any question about weekend rules
+For these queries, call holidays_agent and return a clear, direct answer.
+
+CRITICAL — ACCESS CONTROL (for all non-informational operations only):
+Before performing ANY actual operation (submit, approve, reject, check status, etc.),
+call the access_control_agent to verify that the employee_id belongs to a Director or above AND is based in the USA.
+If no employee_id is provided, ask for it before proceeding.
 If the employee is NOT from the USA, immediately respond:
   "The RWR-RTO system is only available to USA-based employees. This request cannot be processed."
 If access is denied for any other reason, politely inform the user and stop.

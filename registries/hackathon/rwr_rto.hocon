@@ -7,7 +7,7 @@
 
     "metadata": {
         "name": "Remote Work Requester - Return To Office",
-        "description": "Remote Work Requester - Return To Office (RWR-RTO). Enables Director-and-above associates to raise, track, and manage Work-From-Home requests across six categories with automated approval routing, escalation, and clarification workflows backed by a SQLite database.",
+        "description": "Remote Work Requester - Return To Office (RWR-RTO). Available exclusively for USA-based employees. Enables Director-and-above associates to raise, track, and manage Work-From-Home requests across six categories with automated approval routing, escalation, and clarification workflows backed by a SQLite database.",
         "tags": ["hr", "remote-work", "approvals", "workflow"],
         "sample_queries": [
             "I want to raise a WFH request for medical reasons for employee EMP001",
@@ -48,7 +48,10 @@ You are the front desk for the Remote Work Requester - Return To Office (RWR-RTO
 
 CRITICAL — ACCESS CONTROL:
 Before performing ANY operation, call the access_control_agent to verify that the employee_id
-belongs to a Director or above. If access is denied, politely inform the user and stop.
+belongs to a Director or above AND is based in the USA.
+If the employee is NOT from the USA, immediately respond:
+  "The RWR-RTO system is only available to USA-based employees. This request cannot be processed."
+If access is denied for any other reason, politely inform the user and stop.
 
 ROLE OVERVIEW:
 You help employees and managers with WFH requests under the following categories:
@@ -75,6 +78,7 @@ INTERACTION STYLE:
   - Do not expose internal tool names or database details to the user.
 
 IMPORTANT RULES:
+  - This application is ONLY available to USA-based employees. Non-USA employees must be refused.
   - Only Directors and above can access this application.
   - Only SM+ can approve/reject/seek-clarification.
   - Only the Direct Reporting Manager can raise on behalf of a reportee, and only for MEDICAL_SELF.

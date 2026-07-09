@@ -56,15 +56,28 @@ class AccessControlTool(CodedTool):
         emp = _fetch(employee_id)
         if not emp:
             return {"has_access": False, "reason": f"Employee ID '{employee_id}' not found."}
+        country = emp.get("country", "").upper()
+        if country != "USA":
+            return {
+                "has_access": False,
+                "employee_id": employee_id,
+                "name": emp.get("name"),
+                "country": country,
+                "reason": (
+                    f"Access denied. The RWR-RTO system is only available to employees based in the USA. "
+                    f"{emp['name']} is registered under country '{country}'."
+                ),
+            }
         level = emp.get("level", "")
         has_access = level in DIRECTOR_AND_ABOVE
         return {
             "employee_id": employee_id,
             "name": emp.get("name"),
             "level": level,
+            "country": country,
             "has_access": has_access,
             "reason": (
-                f"Access granted. {emp['name']} is a {level}."
+                f"Access granted. {emp['name']} is a {level} based in {country}."
                 if has_access
                 else f"Access denied. This application is restricted to Director and above. "
                      f"{emp['name']} is a {level}."

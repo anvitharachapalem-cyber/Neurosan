@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS employees (
     level       TEXT NOT NULL,   -- C_LEVEL, SVP, EVP, VP, DIRECTOR, SM, MANAGER, ASSOCIATE, ANALYST
     manager_id  TEXT,
     department  TEXT,
+    country     TEXT NOT NULL DEFAULT 'USA',  -- Only USA employees are eligible for RWR-RTO
     FOREIGN KEY (manager_id) REFERENCES employees(employee_id)
 );
 

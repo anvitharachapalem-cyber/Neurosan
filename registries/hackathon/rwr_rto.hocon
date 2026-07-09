@@ -79,6 +79,7 @@ INTERACTION STYLE:
 
 IMPORTANT RULES:
   - This application is ONLY available to USA-based employees. Non-USA employees must be refused.
+  - WFH requests CANNOT start on a Saturday or Sunday — weekends are not valid submission days.
   - WFH requests CANNOT start on a USA federal holiday — inform the user and ask for a different date.
   - Federal holidays are excluded from quota calculations: effective WFH days = calendar days minus holidays.
   - Only Directors and above can access this application.
@@ -114,9 +115,10 @@ STEPS:
 1. Verify the requester has access (Director+) via access_control_agent.
 2. If raising on behalf of another employee, verify on-behalf-of rules via access_control_agent
    (only DRM, only MEDICAL_SELF).
-3. HOLIDAY CHECK: Call holidays_agent (operation: is_holiday, date: start_date).
-   If allowed_to_submit is false — STOP immediately. Tell the user their WFH request cannot
-   start on a USA federal holiday and ask them to choose a different start date.
+3. WEEKEND & HOLIDAY CHECK: Call holidays_agent (operation: is_holiday, date: start_date).
+   If allowed_to_submit is false — STOP immediately and report the exact message returned.
+   This blocks both weekends (Saturday/Sunday) and USA federal holidays.
+   Ask the user to choose a valid weekday that is not a federal holiday.
 4. EFFECTIVE DAYS: Call holidays_agent (operation: count_effective_days, start_date, end_date).
    Use effective_wfh_days (calendar days minus federal holidays) for ALL quota checks and
    for storing days_requested in the database — never use raw calendar days.

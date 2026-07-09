@@ -98,11 +98,32 @@ class HolidayTool(CodedTool):
 
     def _is_holiday(self, args: Dict[str, Any]) -> Dict[str, Any]:
         check_date = args.get("date", datetime.now().date().isoformat())
+        # Check weekend first
+        try:
+            dt = date.fromisoformat(check_date)
+            if dt.weekday() >= 5:
+                day_name = "Saturday" if dt.weekday() == 5 else "Sunday"
+                return {
+                    "date": check_date,
+                    "is_holiday": False,
+                    "is_weekend": True,
+                    "day_name": day_name,
+                    "allowed_to_submit": False,
+                    "message": (
+                        f"{check_date} is a {day_name}. "
+                        "WFH requests cannot start on weekends (Saturday or Sunday). "
+                        "Please choose a weekday."
+                    ),
+                }
+        except (ValueError, TypeError):
+            pass
+        # Check USA federal holiday
         result = is_usa_holiday(check_date)
         if result["is_holiday"]:
             return {
                 "date": check_date,
                 "is_holiday": True,
+                "is_weekend": False,
                 "holiday_name": result["holiday_name"],
                 "allowed_to_submit": False,
                 "message": (
@@ -114,9 +135,10 @@ class HolidayTool(CodedTool):
         return {
             "date": check_date,
             "is_holiday": False,
+            "is_weekend": False,
             "holiday_name": None,
             "allowed_to_submit": True,
-            "message": f"{check_date} is not a USA federal holiday — submission is allowed.",
+            "message": f"{check_date} is a working day — submission is allowed.",
         }
 
     def _list_holidays(self, args: Dict[str, Any]) -> Dict[str, Any]:

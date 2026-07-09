@@ -95,9 +95,27 @@ class DatabaseTool(CodedTool):
     def _create_request(self, args: Dict[str, Any]) -> Dict[str, Any]:
         conn = get_connection()
         try:
-            # Enforce: WFH requests cannot start on a USA federal holiday
             start_date = args.get("start_date", "")
             if start_date:
+                # Enforce: WFH requests cannot start on a weekend
+                try:
+                    start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+                    if start_dt.weekday() >= 5:  # 5=Saturday, 6=Sunday
+                        day_name = "Saturday" if start_dt.weekday() == 5 else "Sunday"
+                        return {
+                            "error": (
+                                f"Cannot submit WFH request. '{start_date}' is a {day_name}. "
+                                "WFH requests cannot start on weekends (Saturday or Sunday). "
+                                "Please choose a weekday."
+                            ),
+                            "start_date": start_date,
+                            "day_name": day_name,
+                            "allowed_to_submit": False,
+                        }
+                except (ValueError, TypeError):
+                    pass
+
+                # Enforce: WFH requests cannot start on a USA federal holiday
                 try:
                     holiday_row = conn.execute(
                         "SELECT name FROM usa_holidays WHERE holiday_date=?", (start_date,)

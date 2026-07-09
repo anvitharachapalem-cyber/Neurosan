@@ -207,3 +207,5 @@ memory/
 
 # test local only
 registries/manifest.hocon.test
+
+corporate_ca.pem

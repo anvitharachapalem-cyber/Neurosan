@@ -25,6 +25,9 @@ import logging
 import os
 import signal
 import sys
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Force the selector event loop on Windows. The default ProactorEventLoop on
 # Python 3.8+/Windows can silently stall the in-process sub-network streaming
@@ -48,6 +51,14 @@ class NeuroSanServerWrapper:  # pylint: disable=too-few-public-methods
         """Initialize the plugins."""
         self._logger = logging.getLogger(self.__class__.__name__)
         self.root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+        # Load .env file so API keys are available in this server subprocess
+        env_path = Path(self.root_dir) / ".env"
+        if env_path.exists():
+            load_dotenv(env_path)
+            print(f"[server] Loaded environment variables from: {env_path}")
+        else:
+            print(f"[server] No .env file found at {env_path}")
 
         if self.root_dir not in sys.path:
             sys.path.insert(0, self.root_dir)

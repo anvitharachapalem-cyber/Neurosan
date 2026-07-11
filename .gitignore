@@ -209,3 +209,7 @@ memory/
 registries/manifest.hocon.test
 
 corporate_ca.pem
+
+venv/
+
+.env.example

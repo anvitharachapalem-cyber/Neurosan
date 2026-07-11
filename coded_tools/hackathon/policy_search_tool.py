@@ -8,8 +8,10 @@ import os
 import re
 from typing import Any
 
-DB_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "..", "database", "hackathon", "hackathon.db"
+_HERE = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.environ.get(
+    "HACKATHON_DB",
+    os.path.normpath(os.path.join(_HERE, "..", "..", "database", "hackathon", "hackathon.db"))
 )
 
 
@@ -31,8 +33,7 @@ class PolicySearchTool:
             return {"error": "query is required"}
 
         try:
-            db_path = os.path.normpath(DB_PATH)
-            conn = sqlite3.connect(db_path)
+            conn = sqlite3.connect(DB_PATH)
 
             # Build keyword search — split query into words
             keywords = [w.lower() for w in re.split(r'\W+', query) if len(w) > 2]

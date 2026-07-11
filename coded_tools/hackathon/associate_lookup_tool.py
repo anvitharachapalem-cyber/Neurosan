@@ -7,8 +7,10 @@ import sqlite3
 import os
 from typing import Any
 
-DB_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "..", "database", "hackathon", "hackathon.db"
+_HERE = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.environ.get(
+    "HACKATHON_DB",
+    os.path.normpath(os.path.join(_HERE, "..", "..", "database", "hackathon", "hackathon.db"))
 )
 
 
@@ -27,8 +29,7 @@ class AssociateLookupTool:
             return {"error": "associate_id is required"}
 
         try:
-            db_path = os.path.normpath(DB_PATH)
-            conn = sqlite3.connect(db_path)
+            conn = sqlite3.connect(DB_PATH)
             conn.row_factory = sqlite3.Row
             row = conn.execute(
                 """SELECT associate_id, associate_name, account, supervisor_name,

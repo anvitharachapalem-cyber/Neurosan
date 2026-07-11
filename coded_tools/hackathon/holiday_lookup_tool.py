@@ -6,8 +6,10 @@ import sqlite3
 import os
 from typing import Any
 
-DB_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "..", "database", "hackathon", "hackathon.db"
+_HERE = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.environ.get(
+    "HACKATHON_DB",
+    os.path.normpath(os.path.join(_HERE, "..", "..", "database", "hackathon", "hackathon.db"))
 )
 
 
@@ -27,8 +29,7 @@ class HolidayLookupTool:
         associate_id = args.get("associate_id")
 
         try:
-            db_path = os.path.normpath(DB_PATH)
-            conn = sqlite3.connect(db_path)
+            conn = sqlite3.connect(DB_PATH)
             conn.row_factory = sqlite3.Row
 
             # Auto-detect location from associate city if not provided

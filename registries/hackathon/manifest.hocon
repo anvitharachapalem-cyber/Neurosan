@@ -2,4 +2,5 @@
     #
     # Hackathon agent networks
     #
+    "hackathon/associate_hub.hocon": true,
 }

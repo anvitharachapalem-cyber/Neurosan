@@ -39,6 +39,18 @@ CREATE TABLE IF NOT EXISTS associates (
     compliance_score              REAL
 );
 
+-- ============================================================
+-- Table 3: policy_documents
+-- Source: PDF policy documents (extracted text per page)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS policy_documents (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_name   TEXT NOT NULL,
+    page_number     INTEGER NOT NULL,
+    page_text       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_policy_doc ON policy_documents(document_name);
+
 CREATE TABLE IF NOT EXISTS attendance (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
     associate_name    TEXT,

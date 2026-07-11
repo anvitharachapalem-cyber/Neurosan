@@ -4,7 +4,9 @@ Looks up office holidays from the office_holidays table for a given location/cit
 """
 import sqlite3
 import os
-from typing import Any
+from typing import Any, Dict
+
+from neuro_san.interfaces.coded_tool import CodedTool
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get(
@@ -13,7 +15,7 @@ DB_PATH = os.environ.get(
 )
 
 
-class HolidayLookupTool:
+class HolidayLookupTool(CodedTool):
     """Returns office holidays and office address for a given location."""
 
     def get_instructions(self) -> str:
@@ -24,7 +26,7 @@ class HolidayLookupTool:
             "Returns holiday list and office address details."
         )
 
-    def invoke(self, args: dict[str, Any]) -> dict[str, Any]:
+    def invoke(self, args: Dict[str, Any], sly_data: Dict[str, Any]) -> Dict[str, Any]:
         location = str(args.get("location", "")).strip()
         associate_id = args.get("associate_id")
 

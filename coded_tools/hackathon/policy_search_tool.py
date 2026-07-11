@@ -6,7 +6,9 @@ Returns matching excerpts with document name and page number.
 import sqlite3
 import os
 import re
-from typing import Any
+from typing import Any, Dict
+
+from neuro_san.interfaces.coded_tool import CodedTool
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get(
@@ -15,7 +17,7 @@ DB_PATH = os.environ.get(
 )
 
 
-class PolicySearchTool:
+class PolicySearchTool(CodedTool):
     """Searches policy documents by keyword and returns relevant excerpts with page references."""
 
     def get_instructions(self) -> str:
@@ -25,7 +27,7 @@ class PolicySearchTool:
             "page number, and relevant text excerpt. Always cite document name and page number in responses."
         )
 
-    def invoke(self, args: dict[str, Any]) -> dict[str, Any]:
+    def invoke(self, args: Dict[str, Any], sly_data: Dict[str, Any]) -> Dict[str, Any]:
         query = str(args.get("query", "")).strip()
         max_results = int(args.get("max_results", 5))
 

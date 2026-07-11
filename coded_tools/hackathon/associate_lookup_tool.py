@@ -5,7 +5,9 @@ Returns name, level, cog_work_model, country, city, supervisor, account.
 """
 import sqlite3
 import os
-from typing import Any
+from typing import Any, Dict
+
+from neuro_san.interfaces.coded_tool import CodedTool
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get(
@@ -14,7 +16,7 @@ DB_PATH = os.environ.get(
 )
 
 
-class AssociateLookupTool:
+class AssociateLookupTool(CodedTool):
     """Retrieves full associate profile from associates table."""
 
     def get_instructions(self) -> str:
@@ -23,7 +25,7 @@ class AssociateLookupTool:
             "Returns name, level, work model, country, city, account and supervisor details."
         )
 
-    def invoke(self, args: dict[str, Any]) -> dict[str, Any]:
+    def invoke(self, args: Dict[str, Any], sly_data: Dict[str, Any]) -> Dict[str, Any]:
         associate_id = args.get("associate_id")
         if not associate_id:
             return {"error": "associate_id is required"}

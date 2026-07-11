@@ -21,7 +21,9 @@ Compliance % = (days attended / total business days in month) * 100
 """
 import sqlite3
 import os
-from typing import Any
+from typing import Any, Dict
+
+from neuro_san.interfaces.coded_tool import CodedTool
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get(
@@ -50,7 +52,7 @@ MONTH_ABBR = {
 }
 
 
-class ComplianceTool:
+class ComplianceTool(CodedTool):
     """Checks RTO compliance for an associate for a given month."""
 
     def get_instructions(self) -> str:
@@ -60,7 +62,7 @@ class ComplianceTool:
             "Returns compliance %, required threshold, and compliant/non-compliant status."
         )
 
-    def invoke(self, args: dict[str, Any]) -> dict[str, Any]:
+    def invoke(self, args: Dict[str, Any], sly_data: Dict[str, Any]) -> Dict[str, Any]:
         associate_id = args.get("associate_id")
         month = str(args.get("month", "")).strip().lower()
 
@@ -79,7 +81,8 @@ class ComplianceTool:
 
             # Get associate profile
             assoc = conn.execute(
-                "SELECT associate_id, associate_name, level, cog_work_model "
+                "SELECT associate_id, associate_name, level, cog_work_model, "
+                "account, city, country, supervisor_name, office_name "
                 "FROM associates WHERE associate_id = ?",
                 (int(associate_id),)
             ).fetchone()
@@ -132,6 +135,11 @@ class ComplianceTool:
                 "level": level,
                 "grade_group": "Senior" if is_senior else "Junior",
                 "cog_work_model": wm,
+                "account": assoc["account"],
+                "city": assoc["city"],
+                "country": assoc["country"],
+                "supervisor_name": assoc["supervisor_name"],
+                "office_name": assoc["office_name"],
                 "month": month_label,
                 "total_business_days": total_biz_days,
                 "days_attended": days_attended,
